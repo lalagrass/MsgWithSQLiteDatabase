@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">SQLiteSample2</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_addmsg">AddMsg</string>
+    <string name="name_detail">Details</string>
+    <string name="name_overview">Overview</string>
+    <string name="string_from">Receive from</string>
+    <string name="string_to">Send to</string>
+    <string name="string_name">Name</string>
+    <string name="string_msg">Message</string>
+    <string name="string_addmsg">Add New Message to SQLite</string>
+    <string name="fire">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="string_i">I</string>
+    <string name="action_delete">Delete</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
