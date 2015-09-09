@@ -1,8 +1,10 @@
 package com.lalagrass.sqlitesample2;
 
 import android.os.Handler;
+import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,18 +23,19 @@ import java.util.List;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialogCallbacks, MsgOverviewAdapter.iAdapterCallback {
+public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialogCallbacks, MsgOverviewAdapter.iAdapterCallback, AppBarLayout.OnOffsetChangedListener {
 
     public interface iCallback {
         void onNameSelected(String name);
     }
 
+    private AppBarLayout appBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private iCallback callback;
     private Handler handler = new Handler();
     private Toolbar toolBar;
     private RecyclerView recyclerView;
     private MsgOverviewAdapter adapter;
-    private int selected;
 
     public MsgOverviewFragment() {
     }
@@ -45,8 +48,22 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_overview, container, false);
+        appBar = (AppBarLayout) rootView.findViewById(R.id.app_bar);
+        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
         toolBar = (Toolbar) rootView.findViewById(R.id.toolbar);
         recyclerView = (RecyclerView) rootView.findViewById(R.id.recycleView);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                RefreshData();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
+            }
+        });
         toolBar.inflateMenu(R.menu.menu_main);
         toolBar.setTitle(R.string.action_addmsg);
         toolBar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
@@ -81,27 +98,15 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
         Log.i(MainActivity.TAG, "onCreateContextMenu");
         MenuInflater inflater = getActivity().getMenuInflater();
         inflater.inflate(R.menu.menu_context_overview, menu);
-/*
-        super.onCreateContextMenu(menu, v, menuInfo);
-        menuInfo.
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
-        int position = info.position;
-        Log.i(MainActivity.TAG, "onCreateContextMenu: " + position);
-        MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.menu_context_overview, menu);
-        */
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        Log.i(MainActivity.TAG, "onContextItemSelected");
         switch (item.getItemId()) {
             case R.id.action_delete:
-                Log.i(MainActivity.TAG, "context menu: delete ");
                 DeleteData(adapter.getSelected());
                 return true;
             case R.id.action_details:
-                Log.i(MainActivity.TAG, "context menu: details ");
                 onClick(adapter.getSelected());
                 return true;
             default:
@@ -175,5 +180,22 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
         MsgData data = adapter.getItem(position);
         if (callback != null)
             callback.onNameSelected(data.Name);
+    }
+
+    @Override
+    public void onPause() {
+        appBar.removeOnOffsetChangedListener(this);
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        appBar.addOnOffsetChangedListener(this);
+    }
+
+    @Override
+    public void onOffsetChanged(AppBarLayout appBarLayout, int i) {
+        swipeRefreshLayout.setEnabled(i == 0);
     }
 }
