@@ -22,22 +22,11 @@ public class MsgOverviewAdapter extends RecyclerView.Adapter<MsgOverviewAdapter.
     public interface iAdapterCallback {
         void onClick(int position);
     }
+
+    private iAdapterCallback callback;
     private List<MsgData> list = new ArrayList<>();
-    private static iAdapterCallback callback;
+    private int selected;
 
-    public void setCallback(iAdapterCallback callback0) {
-        callback = callback0;
-    }
-
-    private void onClickItem(int position) {
-        if (callback != null)
-            callback.onClick(position);
-    }
-    // BEGIN_INCLUDE(recyclerViewSampleViewHolder)
-
-    /**
-     * Provide a reference to the type of views that you are using (custom ViewHolder)
-     */
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView tName;
         private final TextView tMsg;
@@ -50,7 +39,16 @@ public class MsgOverviewAdapter extends RecyclerView.Adapter<MsgOverviewAdapter.
                 @Override
                 public void onClick(View v) {
                     Log.d(MainActivity.TAG, "Element " + getAdapterPosition() + " clicked.");
-                    onClickItem(getAdapterPosition());
+                    if (callback != null)
+                        callback.onClick(getAdapterPosition());
+                }
+            });
+            v.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    setSelected(getAdapterPosition());
+                    v.showContextMenu();
+                    return true;
                 }
             });
             tName = (TextView) v.findViewById(R.id.tName);
@@ -70,34 +68,32 @@ public class MsgOverviewAdapter extends RecyclerView.Adapter<MsgOverviewAdapter.
             return tDate;
         }
     }
-    // END_INCLUDE(recyclerViewSampleViewHolder)
 
-    /**
-     * Initialize the dataset of the Adapter.
-     *
-     */
+    public synchronized int getSelected() {
+        int ret = selected;
+        return ret;
+    }
+
+    private synchronized void setSelected(int p) {
+        this.selected = p;
+    }
+
     public MsgOverviewAdapter() {
     }
 
-    // BEGIN_INCLUDE(recyclerViewOnCreateViewHolder)
-    // Create new views (invoked by the layout manager)
+    public void setCallback(iAdapterCallback callback0) {
+        this.callback = callback0;
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        // Create a new view.
         View v = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.layout_msgoverview_item, viewGroup, false);
         return new ViewHolder(v);
     }
-    // END_INCLUDE(recyclerViewOnCreateViewHolder)
 
-    // BEGIN_INCLUDE(recyclerViewOnBindViewHolder)
-    // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
-        //Log.d(MainActivity.TAG, "Element " + position + " set.");
-
-        // Get element from your dataset at this position and replace the contents of the view
-        // with that element
         MsgData data = list.get(position);
         viewHolder.getTextName().setText(data.Name);
         viewHolder.getTextMsg().setText(data.Msg);
@@ -105,9 +101,7 @@ public class MsgOverviewAdapter extends RecyclerView.Adapter<MsgOverviewAdapter.
         String currentDateandTime = sdf.format(data.Date);
         viewHolder.getTextDate().setText(currentDateandTime);
     }
-    // END_INCLUDE(recyclerViewOnBindViewHolder)
 
-    // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
         return list.size();
@@ -119,7 +113,23 @@ public class MsgOverviewAdapter extends RecyclerView.Adapter<MsgOverviewAdapter.
         notifyDataSetChanged();
     }
 
+    public void UpdateDataAdd(List<MsgData> l) {
+        list.clear();
+        list.addAll(l);
+        notifyItemInserted(0);
+    }
+
+    public void UpdateDataDelete(List<MsgData> l, int position) {
+        list.clear();
+        list.addAll(l);
+        notifyItemRemoved(position);
+    }
+
     public MsgData getItem(int position) {
-        return list.get(position);
+        MsgData ret = null;
+        if (position >= 0 && position < list.size()) {
+            ret = list.get(position);
+        }
+        return ret;
     }
 }

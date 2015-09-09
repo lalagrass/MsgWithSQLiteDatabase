@@ -13,7 +13,8 @@
     <string name="fire">OK</string>
     <string name="cancel">Cancel</string>
     <string name="string_i">I</string>
-    <string name="action_delete">Delete</string>
+    <string name="action_delete">Delete!</string>
+    <string name="action_details">View Details</string>
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

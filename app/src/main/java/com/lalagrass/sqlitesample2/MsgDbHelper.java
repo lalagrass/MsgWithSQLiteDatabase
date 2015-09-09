@@ -158,7 +158,7 @@ public class MsgDbHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             db.beginTransaction();
-            //deleteOverview(name, db);
+            deleteOverview(name, db);
             deleteDetail(name, db);
             db.setTransactionSuccessful();
         } finally {
@@ -168,10 +168,12 @@ public class MsgDbHelper extends SQLiteOpenHelper {
     }
 
     private void deleteOverview(String name, SQLiteDatabase db) {
+        Log.i(MainActivity.TAG, "deleteOverview " + name);
         db.delete(MsgOverviewEntry.TABLE_NAME, MsgOverviewEntry.COLUMN_NAME_NAME + "='" +name + "'", null);
     }
 
     private void deleteDetail(String name, SQLiteDatabase db) {
+        Log.i(MainActivity.TAG, "deleteDetail " + name);
         db.delete(MsgDetailEntry.TABLE_NAME, MsgDetailEntry.COLUMN_NAME_NAME + "='" +name + "'", null);
     }
 

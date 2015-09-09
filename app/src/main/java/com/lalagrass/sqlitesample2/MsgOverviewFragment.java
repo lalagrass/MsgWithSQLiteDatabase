@@ -1,5 +1,6 @@
 package com.lalagrass.sqlitesample2;
 
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -27,10 +28,11 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
     }
 
     private iCallback callback;
-
+    private Handler handler = new Handler();
     private Toolbar toolBar;
     private RecyclerView recyclerView;
     private MsgOverviewAdapter adapter;
+    private int selected;
 
     public MsgOverviewFragment() {
     }
@@ -64,7 +66,8 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
         adapter.setCallback(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
-        //recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        registerForContextMenu(recyclerView);
         MsgDbHelper helper = new MsgDbHelper(getActivity());
         helper.InitDefaultDb();
         RefreshData();
@@ -74,9 +77,13 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        /*
-        Log.i(MainActivity.TAG, "onCreateContextMenu: ");
         super.onCreateContextMenu(menu, v, menuInfo);
+        Log.i(MainActivity.TAG, "onCreateContextMenu");
+        MenuInflater inflater = getActivity().getMenuInflater();
+        inflater.inflate(R.menu.menu_context_overview, menu);
+/*
+        super.onCreateContextMenu(menu, v, menuInfo);
+        menuInfo.
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
         int position = info.position;
         Log.i(MainActivity.TAG, "onCreateContextMenu: " + position);
@@ -87,17 +94,19 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        /*
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        int index = info.position;
+        Log.i(MainActivity.TAG, "onContextItemSelected");
         switch (item.getItemId()) {
             case R.id.action_delete:
-                Log.i(MainActivity.TAG, "context menu: delete " + index);
+                Log.i(MainActivity.TAG, "context menu: delete ");
+                DeleteData(adapter.getSelected());
+                return true;
+            case R.id.action_details:
+                Log.i(MainActivity.TAG, "context menu: details ");
+                onClick(adapter.getSelected());
                 return true;
             default:
                 break;
         }
-        */
         return super.onContextItemSelected(item);
     }
 
@@ -108,23 +117,57 @@ public class MsgOverviewFragment extends Fragment implements AddMsgDialog.dialog
     }
 
     private void RefreshData() {
-        MsgDbHelper helper = new MsgDbHelper(getActivity());
-        List<MsgData> list = helper.listOverview();
-        adapter.UpdateData(list);
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                MsgDbHelper helper = new MsgDbHelper(getActivity());
+                List<MsgData> list = helper.listOverview();
+                adapter.UpdateData(list);
+            }
+        });
     }
 
-    private void DeleteData(String name) {
-        MsgDbHelper helper = new MsgDbHelper(getActivity());
-        helper.delete(name);
-        List<MsgData> list = helper.listOverview();
-        adapter.UpdateData(list);
+    private void RefreshDataAdd() {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                MsgDbHelper helper = new MsgDbHelper(getActivity());
+                List<MsgData> list = helper.listOverview();
+                adapter.UpdateDataAdd(list);
+            }
+        });
+    }
+
+    private void RefreshDataDelete(final int position) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                MsgDbHelper helper = new MsgDbHelper(getActivity());
+                List<MsgData> list = helper.listOverview();
+                adapter.UpdateDataDelete(list, position);
+            }
+        });
+    }
+
+    private void DeleteData(int position) {
+        MsgData data = adapter.getItem(position);
+        if (data != null) {
+            String name = data.Name;
+            if (name != null) {
+                MsgDbHelper helper = new MsgDbHelper(getActivity());
+                helper.delete(name);
+                List<MsgData> list = helper.listOverview();
+                adapter.UpdateData(list);
+            }
+        }
+        RefreshDataDelete(position);
     }
 
     @Override
     public void onDialogOk(MsgData data) {
         MsgDbHelper helper = new MsgDbHelper(getActivity());
         helper.insert(data);
-        RefreshData();
+        RefreshDataAdd();
     }
 
     @Override
